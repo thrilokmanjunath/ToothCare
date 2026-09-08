@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		09853A6F2F7EE68C008AC6CF /* BiteMap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BiteMap.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		09853A6F2F7EE68C008AC6CF /* ToothCare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToothCare.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		09853A712F7EE68C008AC6CF /* BiteMap */ = {
+		09853A712F7EE68C008AC6CF /* ToothCare */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BiteMap;
+			path = ToothCare;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		09853A662F7EE68C008AC6CF = {
 			isa = PBXGroup;
 			children = (
-				09853A712F7EE68C008AC6CF /* BiteMap */,
+				09853A712F7EE68C008AC6CF /* ToothCare */,
 				09853A702F7EE68C008AC6CF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		09853A702F7EE68C008AC6CF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				09853A6F2F7EE68C008AC6CF /* BiteMap.app */,
+				09853A6F2F7EE68C008AC6CF /* ToothCare.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		09853A6E2F7EE68C008AC6CF /* BiteMap */ = {
+		09853A6E2F7EE68C008AC6CF /* ToothCare */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 09853A7A2F7EE68D008AC6CF /* Build configuration list for PBXNativeTarget "BiteMap" */;
+			buildConfigurationList = 09853A7A2F7EE68D008AC6CF /* Build configuration list for PBXNativeTarget "ToothCare" */;
 			buildPhases = (
 				09853A6B2F7EE68C008AC6CF /* Sources */,
 				09853A6C2F7EE68C008AC6CF /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				09853A712F7EE68C008AC6CF /* BiteMap */,
+				09853A712F7EE68C008AC6CF /* ToothCare */,
 			);
-			name = BiteMap;
+			name = ToothCare;
 			packageProductDependencies = (
 			);
-			productName = BiteMap;
-			productReference = 09853A6F2F7EE68C008AC6CF /* BiteMap.app */;
+			productName = ToothCare;
+			productReference = 09853A6F2F7EE68C008AC6CF /* ToothCare.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 09853A6A2F7EE68C008AC6CF /* Build configuration list for PBXProject "BiteMap" */;
+			buildConfigurationList = 09853A6A2F7EE68C008AC6CF /* Build configuration list for PBXProject "ToothCare" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				09853A6E2F7EE68C008AC6CF /* BiteMap */,
+				09853A6E2F7EE68C008AC6CF /* ToothCare */,
 			);
 		};
 /* End PBXProject section */
@@ -266,7 +266,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = thrilokm.BiteMap;
+				PRODUCT_BUNDLE_IDENTIFIER = thrilokm.ToothCare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -298,7 +298,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = thrilokm.BiteMap;
+				PRODUCT_BUNDLE_IDENTIFIER = thrilokm.ToothCare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -313,7 +313,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		09853A6A2F7EE68C008AC6CF /* Build configuration list for PBXProject "BiteMap" */ = {
+		09853A6A2F7EE68C008AC6CF /* Build configuration list for PBXProject "ToothCare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				09853A782F7EE68D008AC6CF /* Debug */,
@@ -322,7 +322,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		09853A7A2F7EE68D008AC6CF /* Build configuration list for PBXNativeTarget "BiteMap" */ = {
+		09853A7A2F7EE68D008AC6CF /* Build configuration list for PBXNativeTarget "ToothCare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				09853A7B2F7EE68D008AC6CF /* Debug */,

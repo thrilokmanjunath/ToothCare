@@ -1,6 +1,6 @@
-# BiteMap
+# ToothCare
 
-BiteMap is an interactive 3D dental charting application built with SwiftUI and SceneKit. It allows users to visualize a 3D model of teeth, interact with individual teeth, and mark pain levels natively on the 3D surfaces.
+ToothCare is an interactive 3D dental charting application built with SwiftUI and SceneKit. It allows users to visualize a 3D model of teeth, interact with individual teeth, and mark pain levels natively on the 3D surfaces.
 
 ## Features
 - **Interactive 3D Model**: Rotate, pan, and zoom around a full dental 3D model.
@@ -15,7 +15,7 @@ BiteMap is an interactive 3D dental charting application built with SwiftUI and 
 
 ## Setup
 1. Clone this repository.
-2. Open `BiteMap.xcodeproj` in Xcode (version 15+ recommended).
+2. Open `ToothCare.xcodeproj` in Xcode (version 15+ recommended).
 3. Build and run on an iOS Simulator or physical device.
 
 ## License

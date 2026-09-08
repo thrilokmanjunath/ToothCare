@@ -1,6 +1,6 @@
 //
-//  BiteMapApp.swift
-//  BiteMap
+//  ToothCareApp.swift
+//  ToothCare
 //
 //  Created by thrilokm
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct BiteMapApp: App {
+struct ToothCareApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

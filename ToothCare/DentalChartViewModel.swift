@@ -157,7 +157,7 @@ final class DentalChartViewModel {
 
     func generatePDF() -> URL? {
         let content = VStack(alignment: .leading, spacing: 10) {
-            Text("BiteMap Patient Chart")
+            Text("ToothCare Patient Chart")
                 .font(.largeTitle)
                 .bold()
                 .padding(.bottom, 20)
@@ -194,11 +194,11 @@ final class DentalChartViewModel {
 
     func saveData() {
         guard let encoded = try? JSONEncoder().encode(savedMarkers) else { return }
-        UserDefaults.standard.set(encoded, forKey: "BiteMap_SavedChart")
+        UserDefaults.standard.set(encoded, forKey: "ToothCare_SavedChart")
     }
 
     func loadData() {
-        guard let data = UserDefaults.standard.data(forKey: "BiteMap_SavedChart"),
+        guard let data = UserDefaults.standard.data(forKey: "ToothCare_SavedChart"),
               let decoded = try? JSONDecoder().decode([PainMarkerModel].self, from: data) else { return }
         savedMarkers = decoded
     }
