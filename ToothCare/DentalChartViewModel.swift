@@ -19,6 +19,7 @@ final class DentalChartViewModel {
     var currentNote: String = ""
     var isXRayMode: Bool = false
     var resetCameraTrigger: Int = 0
+    var refreshTrigger: Int = 0
 
     func resetCamera() {
         resetCameraTrigger += 1
@@ -67,6 +68,14 @@ final class DentalChartViewModel {
         "Xander_file_LowerJaw_013": "Tooth 14",
         "Xander_file_LowerJaw_014": "Tooth 15"
     ]
+
+    private lazy var toothMappingReversed: [String: String] = {
+        var reversed: [String: String] = [:]
+        for (key, value) in toothMapping {
+            reversed[value] = key
+        }
+        return reversed
+    }()
 
     // MARK: - Lifecycle
 
@@ -140,6 +149,33 @@ final class DentalChartViewModel {
         }
     }
 
+    // MARK: - NLP Processing
+    
+    func processClinicalSummary(text: String) {
+        let results = NLPParser.parse(summary: text)
+        
+        for result in results {
+            guard let rawNodeName = toothMappingReversed[result.toothName] else { continue }
+            
+            // To place the marker, we need its 3D location. We will set it to (0,0,0) initially,
+            // and the `restore3DMarkers` function will calculate the true bounding box center.
+            let newMarker = PainMarkerModel(
+                rawNodeName: rawNodeName,
+                tooth: result.toothName,
+                codableLocation: CodableVector3(SCNVector3Zero),
+                painLevel: 5,
+                diagnosis: result.diagnosis,
+                note: "AI Extracted: \"\(result.originalSentence)\""
+            )
+            savedMarkers.append(newMarker)
+        }
+        
+        saveData()
+        
+        // Trigger a full scene rebuild so the new markers are visually placed
+        refreshTrigger += 1
+    }
+
     // MARK: - Marker Management
 
     func clearAllMarkers() {
@@ -181,9 +217,12 @@ final class DentalChartViewModel {
     }
 
     // MARK: - Scene Restoration
-
+    
     func restore3DMarkers(to rootNode: SCNNode) {
+        markerNodes.forEach { $0.removeFromParentNode() }
         markerNodes.removeAll()
+        
+        // Hide missing teeth, then add spheres for others
         for marker in savedMarkers {
             guard let toothNode = rootNode.childNode(withName: marker.rawNodeName, recursively: true) else { continue }
             
@@ -193,7 +232,22 @@ final class DentalChartViewModel {
                 let shape: SCNGeometry = marker.diagnosis == .cavity ? SCNBox(width: 0.08, height: 0.08, length: 0.08, chamferRadius: 0) : SCNSphere(radius: 0.05)
                 let markerNode = SCNNode(geometry: shape)
                 applyDiagnosisMaterial(to: markerNode, diagnosis: marker.diagnosis, painLevel: Double(marker.painLevel))
-                markerNode.position = marker.location
+                
+                // If it's an AI generated marker, its location is (0,0,0). We need to center it on the tooth.
+                if marker.location.x == 0 && marker.location.y == 0 && marker.location.z == 0 {
+                    let (min, max) = toothNode.boundingBox
+                    let center = SCNVector3(
+                        x: (max.x + min.x) / 2,
+                        y: (max.y + min.y) / 2,
+                        z: (max.z + min.z) / 2
+                    )
+                    // The bounding box center is in the tooth's local coordinate space.
+                    // We can just add it as a child, and position it at `center`.
+                    markerNode.position = center
+                } else {
+                    markerNode.position = marker.location
+                }
+                
                 toothNode.addChildNode(markerNode)
                 markerNodes.append(markerNode)
             }

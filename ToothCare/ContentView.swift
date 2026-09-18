@@ -6,6 +6,7 @@ struct ContentView: View {
 
     @State private var viewModel = DentalChartViewModel()
     @State private var showingChart: Bool = false
+    @State private var showingAIInput: Bool = false
 
     // MARK: - Body
 
@@ -33,6 +34,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingChart) {
             chartSheet
+        }
+        .sheet(isPresented: $showingAIInput) {
+            DigitalTwinInputView(viewModel: viewModel)
         }
     }
 
@@ -97,6 +101,11 @@ struct ContentView: View {
                 viewModel.clearAllMarkers()
             } label: {
                 toolbarIcon("trash.circle", foreground: .red)
+            }
+            Button {
+                showingAIInput = true
+            } label: {
+                toolbarIcon("wand.and.stars.inverse", foreground: .purple)
             }
             Button {
                 showingChart = true

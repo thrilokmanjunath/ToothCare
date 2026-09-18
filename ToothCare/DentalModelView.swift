@@ -163,6 +163,14 @@ struct DentalModelView: UIViewRepresentable {
             }
         }
         
+        // Handle external marker updates (like NLP AI)
+        if context.coordinator.lastRefreshTrigger != viewModel.refreshTrigger {
+            context.coordinator.lastRefreshTrigger = viewModel.refreshTrigger
+            if let root = uiView.scene?.rootNode {
+                viewModel.restore3DMarkers(to: root)
+            }
+        }
+        
         SCNTransaction.commit()
     }
 
@@ -178,6 +186,7 @@ struct DentalModelView: UIViewRepresentable {
         var baseScale: Float = 1.0
         var currentScale: Float = 1.0
         var lastResetTrigger: Int = 0
+        var lastRefreshTrigger: Int = 0
         var idleSpinAnimation: CABasicAnimation?
         var rootNode: SCNNode?
 
