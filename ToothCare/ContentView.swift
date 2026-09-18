@@ -94,45 +94,52 @@ struct ContentView: View {
     }
 
     private var toolbar: some View {
-        HStack {
-            Spacer()
+        HStack(spacing: 14) {
             Button {
                 viewModel.resetCamera()
             } label: {
-                toolbarIcon("arrow.counterclockwise")
+                toolbarIcon("arrow.counterclockwise", colors: [.white, Color(white: 0.95)], foreground: .primary)
             }
             Button {
                 viewModel.isXRayMode.toggle()
             } label: {
-                toolbarIcon("viewfinder", background: viewModel.isXRayMode ? .blue : .white, foreground: viewModel.isXRayMode ? .white : .black)
+                toolbarIcon("viewfinder", colors: viewModel.isXRayMode ? [.blue, .cyan] : [.white, Color(white: 0.95)], foreground: viewModel.isXRayMode ? .white : .primary)
             }
             Button {
                 viewModel.markerModeActive.toggle()
             } label: {
-                toolbarIcon("pencil.circle", background: viewModel.markerModeActive ? .red : .white, foreground: viewModel.markerModeActive ? .white : .black)
+                toolbarIcon("pencil.circle", colors: viewModel.markerModeActive ? [.red, .orange] : [.white, Color(white: 0.95)], foreground: viewModel.markerModeActive ? .white : .primary)
             }
             Button {
                 viewModel.clearAllMarkers()
             } label: {
-                toolbarIcon("trash.circle", foreground: .red)
+                toolbarIcon("trash.circle", colors: [.white, Color(white: 0.95)], foreground: .red)
             }
+            
+            Divider()
+                .frame(height: 30)
+            
             Button {
                 showingPatientDirectory = true
             } label: {
-                toolbarIcon("person.2", foreground: .green)
+                toolbarIcon("person.2.fill", colors: [.green, .teal], foreground: .white)
             }
             Button {
                 showingAIInput = true
             } label: {
-                toolbarIcon("wand.and.stars.inverse", foreground: .purple)
+                toolbarIcon("wand.and.stars.inverse", colors: [.purple, .indigo], foreground: .white)
             }
             Button {
                 showingChart = true
             } label: {
-                toolbarIcon("list.clipboard", foreground: .blue)
+                toolbarIcon("list.clipboard.fill", colors: [.blue, .mint], foreground: .white)
             }
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
+        .clipShape(Capsule())
+        .shadow(color: Color.black.opacity(0.2), radius: 10, y: 5)
         .padding(.bottom, 20)
     }
 
@@ -191,16 +198,17 @@ struct ContentView: View {
 
     private func toolbarIcon(
         _ systemName: String,
-        background: Color = .white,
+        colors: [Color] = [.white, Color(white: 0.95)],
         foreground: Color = .black
     ) -> some View {
         Image(systemName: systemName)
-            .font(.title2)
+            .font(.title3.weight(.bold))
             .foregroundColor(foreground)
-            .padding()
-            .background(background)
+            .frame(width: 44, height: 44)
+            .background(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
             .clipShape(Circle())
-            .shadow(radius: 5)
+            .overlay(Circle().stroke(Color.white.opacity(0.6), lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.15), radius: 3, x: 0, y: 2)
     }
 }
 

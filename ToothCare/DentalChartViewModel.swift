@@ -46,6 +46,8 @@ final class DentalChartViewModel {
     }
 
     private let toothMapping: [String: String] = [
+        "Xander_file_UpperJaw": "Upper Jaw (Gums)",
+        "Xander_file_LowerJaw": "Lower Jaw (Gums)",
         "Xander_file_UpperJaw_001": "Tooth 18",
         "Xander_file_UpperJaw_002": "Tooth 19",
         "Xander_file_UpperJaw_004": "Tooth 20",
@@ -229,7 +231,12 @@ final class DentalChartViewModel {
                     toothNode.opacity = 1.0
                     let material = SCNMaterial()
                     material.lightingModel = .physicallyBased
-                    material.diffuse.contents = UIColor.white
+                    if rawName == "Xander_file_UpperJaw" || rawName == "Xander_file_LowerJaw" {
+                        material.diffuse.contents = UIColor(red: 0.9, green: 0.6, blue: 0.6, alpha: 1.0)
+                        material.roughness.contents = NSNumber(value: 0.4)
+                    } else {
+                        material.diffuse.contents = UIColor.white
+                    }
                     toothNode.geometry?.materials = [material]
                     toothNode.eulerAngles = SCNVector3Zero
                 }
@@ -269,14 +276,19 @@ final class DentalChartViewModel {
         markerNodes.forEach { $0.removeFromParentNode() }
         markerNodes.removeAll()
         
-        // Reset all base teeth to default state
+        // Reset all base teeth and jaws to default state
         for rawName in toothMapping.keys {
             if let toothNode = rootNode.childNode(withName: rawName, recursively: true) {
                 toothNode.opacity = 1.0
                 toothNode.eulerAngles = SCNVector3Zero
                 let material = SCNMaterial()
                 material.lightingModel = .physicallyBased
-                material.diffuse.contents = UIColor.white
+                if rawName == "Xander_file_UpperJaw" || rawName == "Xander_file_LowerJaw" {
+                    material.diffuse.contents = UIColor(red: 0.9, green: 0.6, blue: 0.6, alpha: 1.0) // Gum Pink
+                    material.roughness.contents = NSNumber(value: 0.4)
+                } else {
+                    material.diffuse.contents = UIColor.white
+                }
                 toothNode.geometry?.materials = [material]
             }
         }
