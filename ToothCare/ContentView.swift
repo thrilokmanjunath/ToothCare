@@ -4,7 +4,6 @@ struct ContentView: View {
 
     // MARK: - State
 
-    @State private var zoomMultiplier: Float = 1.0
     @State private var viewModel = DentalChartViewModel()
     @State private var showingChart: Bool = false
 
@@ -12,7 +11,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            DentalModelView(zoomMultiplier: $zoomMultiplier, viewModel: viewModel)
+            DentalModelView(viewModel: viewModel)
                 .edgesIgnoringSafeArea(.all)
 
             VStack {
@@ -83,16 +82,6 @@ struct ContentView: View {
                 viewModel.isXRayMode.toggle()
             } label: {
                 toolbarIcon("viewfinder", background: viewModel.isXRayMode ? .blue : .white, foreground: viewModel.isXRayMode ? .white : .black)
-            }
-            Button {
-                zoomMultiplier *= 1.2
-            } label: {
-                toolbarIcon("plus.magnifyingglass")
-            }
-            Button {
-                zoomMultiplier *= 0.8
-            } label: {
-                toolbarIcon("minus.magnifyingglass")
             }
             Button {
                 viewModel.markerModeActive.toggle()
