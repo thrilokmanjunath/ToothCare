@@ -314,6 +314,9 @@ final class DentalChartViewModel {
                         if !marker.note.isEmpty {
                             Text("Note: \(marker.note)").font(.subheadline).foregroundColor(.secondary)
                         }
+                        Text("Treatment: \(marker.diagnosis.suggestedTreatment)")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
                     }
                     Spacer()
                     VStack(alignment: .trailing) {

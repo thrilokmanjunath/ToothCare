@@ -134,6 +134,9 @@ struct ContentView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
+                            Text("Suggested: \(summary.diagnosis.suggestedTreatment)")
+                                .font(.caption)
+                                .foregroundColor(.blue)
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 4) {

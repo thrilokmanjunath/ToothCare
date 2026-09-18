@@ -28,6 +28,20 @@ enum DiagnosisType: String, Codable, Sendable, CaseIterable {
         }
     }
     
+    var suggestedTreatment: String {
+        switch self {
+        case .pain: return "Clinical evaluation & radiograph required"
+        case .cavity: return "Composite Filling or Dental Crown"
+        case .plaque: return "Professional Dental Prophylaxis (Cleaning)"
+        case .fracture: return "Dental Bonding, Veneer, or Crown"
+        case .missing: return "Dental Implant or Bridge"
+        case .gumDisease: return "Scaling and Root Planing (Deep Cleaning)"
+        case .abscess: return "Root Canal Therapy & Antibiotics"
+        case .impacted: return "Surgical Extraction"
+        case .crown: return "Routine Monitoring"
+        }
+    }
+    
     var uiColor: UIColor {
         UIColor(color)
     }
