@@ -27,7 +27,19 @@ final class NLPParser {
         "hurts": .pain,
         "ache": .pain,
         "sensitive": .pain,
-        "sensitivity": .pain
+        "sensitivity": .pain,
+        "periodontitis": .gumDisease,
+        "gingivitis": .gumDisease,
+        "gum disease": .gumDisease,
+        "recession": .gumDisease,
+        "abscess": .abscess,
+        "infection": .abscess,
+        "root canal": .abscess,
+        "impacted": .impacted,
+        "wisdom": .impacted,
+        "crown": .crown,
+        "implant": .crown,
+        "restored": .crown
     ]
     
     static func parse(summary: String) -> [NLPResult] {

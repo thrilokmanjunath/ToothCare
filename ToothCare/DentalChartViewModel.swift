@@ -94,14 +94,44 @@ final class DentalChartViewModel {
     }
 
     private func applyDiagnosisMaterial(to node: SCNNode, diagnosis: DiagnosisType, painLevel: Double) {
-        if diagnosis == .missing {
-            // Handled separately by hiding the parent node
-            return
+        let material = SCNMaterial()
+        material.lightingModel = .physicallyBased
+        
+        switch diagnosis {
+        case .pain:
+            let intensity = CGFloat(painLevel / 10.0)
+            material.diffuse.contents = UIColor(red: 1.0, green: 1.0 - intensity, blue: 0.0, alpha: 1.0)
+            material.emission.contents = UIColor(red: 0.5 * intensity, green: 0, blue: 0, alpha: 1.0)
+        case .cavity:
+            material.diffuse.contents = UIColor(white: 0.1, alpha: 1.0)
+            material.roughness.contents = NSNumber(value: 0.9)
+        case .plaque:
+            material.diffuse.contents = UIColor(red: 0.9, green: 0.8, blue: 0.4, alpha: 0.8)
+            material.roughness.contents = NSNumber(value: 0.6)
+        case .fracture:
+            material.diffuse.contents = UIColor.darkGray
+            material.metalness.contents = NSNumber(value: 0.8)
+            material.roughness.contents = NSNumber(value: 0.2)
+        case .missing:
+            break
+        case .gumDisease:
+            material.diffuse.contents = UIColor(red: 0.7, green: 0.1, blue: 0.1, alpha: 0.8)
+            material.emission.contents = UIColor(red: 0.2, green: 0.0, blue: 0.0, alpha: 1.0)
+        case .abscess:
+            material.diffuse.contents = UIColor.green
+            material.emission.contents = UIColor(red: 0.0, green: 0.8, blue: 0.2, alpha: 1.0)
+        case .impacted:
+            material.diffuse.contents = UIColor.purple
+            material.transparent.contents = UIColor(white: 1.0, alpha: 0.4)
+            material.blendMode = .add
+            material.isDoubleSided = true
+        case .crown:
+            material.diffuse.contents = UIColor.white
+            material.metalness.contents = NSNumber(value: 1.0)
+            material.roughness.contents = NSNumber(value: 0.1)
         }
         
-        node.geometry?.firstMaterial?.diffuse.contents = diagnosis == .pain 
-            ? UIColor(red: 1.0, green: 1.0 - (CGFloat(painLevel) / 10.0), blue: 0.0, alpha: 1.0)
-            : diagnosis.uiColor
+        node.geometry?.materials = [material]
     }
 
     private func placeMarker(on node: SCNNode, at location: SCNVector3) {
@@ -118,8 +148,12 @@ final class DentalChartViewModel {
         )
 
         if currentDiagnosis == .missing {
-            // Hide the tooth and don't place a sphere
             node.opacity = 0.0
+        } else if currentDiagnosis == .gumDisease || currentDiagnosis == .impacted || currentDiagnosis == .crown {
+            if currentDiagnosis == .impacted {
+                node.eulerAngles = SCNVector3(x: .pi / 2, y: 0, z: 0)
+            }
+            applyDiagnosisMaterial(to: node, diagnosis: currentDiagnosis, painLevel: currentPainLevel)
         } else {
             let shape: SCNGeometry = currentDiagnosis == .cavity ? SCNBox(width: 0.08, height: 0.08, length: 0.08, chamferRadius: 0) : SCNSphere(radius: 0.05)
             let markerNode = SCNNode(geometry: shape)
@@ -182,10 +216,16 @@ final class DentalChartViewModel {
         markerNodes.forEach { $0.removeFromParentNode() }
         markerNodes.removeAll()
         
-        // Restore missing teeth
-        for marker in savedMarkers where marker.diagnosis == .missing {
-            if let root = selectedNode?.parent?.parent { // Approximate root access
-                root.childNode(withName: marker.rawNodeName, recursively: true)?.opacity = 1.0
+        if let root = selectedNode?.parent?.parent { // Approximate root access
+            for rawName in toothMapping.keys {
+                if let toothNode = root.childNode(withName: rawName, recursively: true) {
+                    toothNode.opacity = 1.0
+                    let material = SCNMaterial()
+                    material.lightingModel = .physicallyBased
+                    material.diffuse.contents = UIColor.white
+                    toothNode.geometry?.materials = [material]
+                    toothNode.eulerAngles = SCNVector3Zero
+                }
             }
         }
         
@@ -228,6 +268,11 @@ final class DentalChartViewModel {
             
             if marker.diagnosis == .missing {
                 toothNode.opacity = 0.0
+            } else if marker.diagnosis == .gumDisease || marker.diagnosis == .impacted || marker.diagnosis == .crown {
+                if marker.diagnosis == .impacted {
+                    toothNode.eulerAngles = SCNVector3(x: .pi / 2, y: 0, z: 0)
+                }
+                applyDiagnosisMaterial(to: toothNode, diagnosis: marker.diagnosis, painLevel: Double(marker.painLevel))
             } else {
                 let shape: SCNGeometry = marker.diagnosis == .cavity ? SCNBox(width: 0.08, height: 0.08, length: 0.08, chamferRadius: 0) : SCNSphere(radius: 0.05)
                 let markerNode = SCNNode(geometry: shape)
@@ -241,8 +286,6 @@ final class DentalChartViewModel {
                         y: (max.y + min.y) / 2,
                         z: (max.z + min.z) / 2
                     )
-                    // The bounding box center is in the tooth's local coordinate space.
-                    // We can just add it as a child, and position it at `center`.
                     markerNode.position = center
                 } else {
                     markerNode.position = marker.location

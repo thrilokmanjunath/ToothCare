@@ -51,7 +51,10 @@ struct ContentView: View {
                     Text(type.rawValue).tag(type)
                 }
             }
-            .pickerStyle(.segmented)
+            .pickerStyle(.menu)
+            .padding(8)
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(8)
 
             if viewModel.currentDiagnosis == .pain {
                 VStack {

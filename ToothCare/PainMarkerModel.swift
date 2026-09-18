@@ -9,14 +9,22 @@ enum DiagnosisType: String, Codable, Sendable, CaseIterable {
     case plaque = "Plaque"
     case fracture = "Fracture"
     case missing = "Missing Tooth"
+    case gumDisease = "Gum Disease"
+    case abscess = "Abscess"
+    case impacted = "Impacted"
+    case crown = "Crown / Implant"
 
     var color: Color {
         switch self {
         case .pain: return .red
         case .cavity: return .black
         case .plaque: return .yellow
-        case .fracture: return .blue
-        case .missing: return .clear
+        case .fracture: return .orange
+        case .missing: return .gray
+        case .gumDisease: return Color(red: 0.6, green: 0, blue: 0) // Dark Red
+        case .abscess: return .green
+        case .impacted: return .purple
+        case .crown: return .blue
         }
     }
     
