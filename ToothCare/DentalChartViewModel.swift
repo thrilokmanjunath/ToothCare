@@ -69,13 +69,13 @@ final class DentalChartViewModel {
         "Xander_file_LowerJaw_014": "Tooth 15"
     ]
 
-    private lazy var toothMappingReversed: [String: String] = {
+    private var toothMappingReversed: [String: String] {
         var reversed: [String: String] = [:]
         for (key, value) in toothMapping {
             reversed[value] = key
         }
         return reversed
-    }()
+    }
 
     // MARK: - Lifecycle
 
