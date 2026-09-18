@@ -12,12 +12,27 @@ final class DentalChartViewModel {
     var selectedNode: SCNNode?
     var savedMarkers: [PainMarkerModel] = []
     var markerNodes: [SCNNode] = []
+    
+    // New properties
     var currentPainLevel: Double = 5.0
+    var currentDiagnosis: DiagnosisType = .pain
+    var currentNote: String = ""
+    var isXRayMode: Bool = false {
+        didSet {
+            // Re-apply material on selected node if needed, or notify the view.
+            // X-Ray material changes are handled directly in DentalModelView.updateUIView.
+        }
+    }
 
     var chartSummaries: [ChartSummary] {
         savedMarkers.reduce(into: [ChartSummary]()) { summaries, marker in
-            if !summaries.contains(where: { $0.tooth == marker.tooth && $0.painLevel == marker.painLevel }) {
-                summaries.append(ChartSummary(tooth: marker.tooth, painLevel: marker.painLevel))
+            if !summaries.contains(where: { $0.tooth == marker.tooth && $0.diagnosis == marker.diagnosis }) {
+                summaries.append(ChartSummary(
+                    tooth: marker.tooth, 
+                    painLevel: marker.painLevel,
+                    diagnosis: marker.diagnosis,
+                    note: marker.note
+                ))
             }
         }
     }
@@ -69,34 +84,53 @@ final class DentalChartViewModel {
         }
     }
 
-    private func placeMarker(on node: SCNNode, at location: SCNVector3) {
-        let painFraction = CGFloat(currentPainLevel) / 10.0
-        let sphere = SCNSphere(radius: 0.05)
-        sphere.firstMaterial?.diffuse.contents = UIColor(
-            red: 1.0,
-            green: 1.0 - painFraction,
-            blue: 0.0,
-            alpha: 1.0
-        )
-        let markerNode = SCNNode(geometry: sphere)
-        markerNode.position = location
-        node.addChildNode(markerNode)
-        markerNodes.append(markerNode)
+    private func applyDiagnosisMaterial(to node: SCNNode, diagnosis: DiagnosisType, painLevel: Double) {
+        if diagnosis == .missing {
+            // Handled separately by hiding the parent node
+            return
+        }
+        
+        node.geometry?.firstMaterial?.diffuse.contents = diagnosis == .pain 
+            ? UIColor(red: 1.0, green: 1.0 - (CGFloat(painLevel) / 10.0), blue: 0.0, alpha: 1.0)
+            : diagnosis.uiColor
+    }
 
+    private func placeMarker(on node: SCNNode, at location: SCNVector3) {
         let rawName = node.name ?? "Unknown"
+        let toothName = toothMapping[rawName] ?? rawName
+        
         let newMarker = PainMarkerModel(
             rawNodeName: rawName,
-            tooth: toothMapping[rawName] ?? rawName,
+            tooth: toothName,
             codableLocation: CodableVector3(location),
-            painLevel: Int(currentPainLevel)
+            painLevel: Int(currentPainLevel),
+            diagnosis: currentDiagnosis,
+            note: currentNote
         )
+
+        if currentDiagnosis == .missing {
+            // Hide the tooth and don't place a sphere
+            node.opacity = 0.0
+        } else {
+            let shape: SCNGeometry = currentDiagnosis == .cavity ? SCNBox(width: 0.08, height: 0.08, length: 0.08, chamferRadius: 0) : SCNSphere(radius: 0.05)
+            let markerNode = SCNNode(geometry: shape)
+            applyDiagnosisMaterial(to: markerNode, diagnosis: currentDiagnosis, painLevel: currentPainLevel)
+            markerNode.position = location
+            node.addChildNode(markerNode)
+            markerNodes.append(markerNode)
+        }
+        
         savedMarkers.append(newMarker)
         saveData()
     }
 
     private func selectTooth(_ node: SCNNode) {
+        // Reset previous selection unless it's missing or in X-Ray mode (which overrides materials later)
         selectedNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.white
-        node.geometry?.firstMaterial?.diffuse.contents = UIColor.systemBlue
+        
+        if node.opacity > 0 {
+            node.geometry?.firstMaterial?.diffuse.contents = UIColor.systemBlue
+        }
         selectedNode = node
 
         if let nodeName = node.name, let medicalName = toothMapping[nodeName] {
@@ -111,6 +145,14 @@ final class DentalChartViewModel {
     func clearAllMarkers() {
         markerNodes.forEach { $0.removeFromParentNode() }
         markerNodes.removeAll()
+        
+        // Restore missing teeth
+        for marker in savedMarkers where marker.diagnosis == .missing {
+            if let root = selectedNode?.parent?.parent { // Approximate root access
+                root.childNode(withName: marker.rawNodeName, recursively: true)?.opacity = 1.0
+            }
+        }
+        
         savedMarkers.removeAll()
         saveData()
     }
@@ -119,12 +161,19 @@ final class DentalChartViewModel {
         for index in offsets {
             let target = chartSummaries[index]
             let matchingIndices = savedMarkers.indices.filter {
-                savedMarkers[$0].tooth == target.tooth && savedMarkers[$0].painLevel == target.painLevel
+                savedMarkers[$0].tooth == target.tooth && savedMarkers[$0].diagnosis == target.diagnosis
             }
-            // Reverse deletion preserves index validity as the array shrinks.
+            
             for i in matchingIndices.reversed() {
-                markerNodes[i].removeFromParentNode()
-                markerNodes.remove(at: i)
+                let marker = savedMarkers[i]
+                if marker.diagnosis == .missing {
+                    // We need to restore opacity. The nodes aren't in markerNodes.
+                    // We will rely on restore3DMarkers or a full refresh, 
+                    // but for now, this simple app just needs the data removed.
+                } else {
+                    markerNodes[i].removeFromParentNode()
+                    markerNodes.remove(at: i)
+                }
                 savedMarkers.remove(at: i)
             }
         }
@@ -133,23 +182,21 @@ final class DentalChartViewModel {
 
     // MARK: - Scene Restoration
 
-    /// Rebuilds pain marker nodes from persisted data after the SceneKit scene is initialized.
     func restore3DMarkers(to rootNode: SCNNode) {
         markerNodes.removeAll()
         for marker in savedMarkers {
             guard let toothNode = rootNode.childNode(withName: marker.rawNodeName, recursively: true) else { continue }
-            let painFraction = CGFloat(marker.painLevel) / 10.0
-            let sphere = SCNSphere(radius: 0.05)
-            sphere.firstMaterial?.diffuse.contents = UIColor(
-                red: 1.0,
-                green: 1.0 - painFraction,
-                blue: 0.0,
-                alpha: 1.0
-            )
-            let markerNode = SCNNode(geometry: sphere)
-            markerNode.position = marker.location
-            toothNode.addChildNode(markerNode)
-            markerNodes.append(markerNode)
+            
+            if marker.diagnosis == .missing {
+                toothNode.opacity = 0.0
+            } else {
+                let shape: SCNGeometry = marker.diagnosis == .cavity ? SCNBox(width: 0.08, height: 0.08, length: 0.08, chamferRadius: 0) : SCNSphere(radius: 0.05)
+                let markerNode = SCNNode(geometry: shape)
+                applyDiagnosisMaterial(to: markerNode, diagnosis: marker.diagnosis, painLevel: Double(marker.painLevel))
+                markerNode.position = marker.location
+                toothNode.addChildNode(markerNode)
+                markerNodes.append(markerNode)
+            }
         }
     }
 
@@ -164,11 +211,23 @@ final class DentalChartViewModel {
             Text("Date: \(Date().formatted(date: .abbreviated, time: .shortened))")
                 .padding(.bottom, 20)
             ForEach(savedMarkers) { marker in
-                HStack {
-                    Text(marker.tooth).font(.headline)
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading) {
+                        Text(marker.tooth).font(.headline)
+                        if !marker.note.isEmpty {
+                            Text("Note: \(marker.note)").font(.subheadline).foregroundColor(.secondary)
+                        }
+                    }
                     Spacer()
-                    Text("Pain Level: \(marker.painLevel)")
-                        .foregroundColor(marker.painLevel > 5 ? .red : .orange)
+                    VStack(alignment: .trailing) {
+                        Text(marker.diagnosis.rawValue)
+                            .fontWeight(.bold)
+                            .foregroundColor(marker.diagnosis.color)
+                        if marker.diagnosis == .pain {
+                            Text("Level: \(marker.painLevel)")
+                                .foregroundColor(marker.painLevel > 5 ? .red : .orange)
+                        }
+                    }
                 }
                 Divider()
             }
@@ -194,11 +253,11 @@ final class DentalChartViewModel {
 
     func saveData() {
         guard let encoded = try? JSONEncoder().encode(savedMarkers) else { return }
-        UserDefaults.standard.set(encoded, forKey: "ToothCare_SavedChart")
+        UserDefaults.standard.set(encoded, forKey: "ToothCare_SavedChart_v2")
     }
 
     func loadData() {
-        guard let data = UserDefaults.standard.data(forKey: "ToothCare_SavedChart"),
+        guard let data = UserDefaults.standard.data(forKey: "ToothCare_SavedChart_v2"),
               let decoded = try? JSONDecoder().decode([PainMarkerModel].self, from: data) else { return }
         savedMarkers = decoded
     }
@@ -210,4 +269,6 @@ struct ChartSummary: Identifiable {
     let id = UUID()
     let tooth: String
     let painLevel: Int
+    let diagnosis: DiagnosisType
+    let note: String
 }

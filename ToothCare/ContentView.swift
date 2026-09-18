@@ -25,7 +25,7 @@ struct ContentView: View {
                     .padding(.top, 40)
 
                 if viewModel.markerModeActive {
-                    painLevelControl
+                    markerControlPanel
                 }
 
                 Spacer()
@@ -39,25 +39,51 @@ struct ContentView: View {
 
     // MARK: - Subviews
 
-    private var painLevelControl: some View {
-        VStack {
-            Text("Pain Level: \(Int(viewModel.currentPainLevel))")
-                .font(.headline)
-                .foregroundColor(.black)
-
+    private var markerControlPanel: some View {
+        VStack(alignment: .leading, spacing: 15) {
             @Bindable var bindableViewModel = viewModel
-            Slider(value: $bindableViewModel.currentPainLevel, in: 1...10, step: 1)
-                .tint(Color(red: 1.0, green: 1.0 - (viewModel.currentPainLevel / 10.0), blue: 0.0))
+            
+            Picker("Diagnosis", selection: $bindableViewModel.currentDiagnosis) {
+                ForEach(DiagnosisType.allCases, id: \.self) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            if viewModel.currentDiagnosis == .pain {
+                VStack {
+                    Text("Pain Level: \(Int(viewModel.currentPainLevel))")
+                        .font(.subheadline)
+                        .foregroundColor(.black)
+                    Slider(value: $bindableViewModel.currentPainLevel, in: 1...10, step: 1)
+                        .tint(Color(red: 1.0, green: 1.0 - (viewModel.currentPainLevel / 10.0), blue: 0.0))
+                }
+            }
+
+            TextField("Add clinical note (optional)", text: $bindableViewModel.currentNote)
+                .textFieldStyle(.roundedBorder)
+                .submitLabel(.done)
+                
+            Text("Tap on a tooth to apply diagnosis")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding()
-        .background(Color.white.opacity(0.9))
-        .cornerRadius(10)
-        .padding(.horizontal, 40)
+        .background(Color.white.opacity(0.95))
+        .cornerRadius(15)
+        .shadow(radius: 10)
+        .padding(.horizontal, 20)
     }
 
     private var toolbar: some View {
         HStack {
             Spacer()
+            Button {
+                viewModel.isXRayMode.toggle()
+            } label: {
+                toolbarIcon("viewfinder", background: viewModel.isXRayMode ? .blue : .white, foreground: viewModel.isXRayMode ? .white : .black)
+            }
             Button {
                 zoomMultiplier *= 1.2
             } label: {
@@ -71,7 +97,7 @@ struct ContentView: View {
             Button {
                 viewModel.markerModeActive.toggle()
             } label: {
-                toolbarIcon("pencil.circle", background: viewModel.markerModeActive ? .red : .white)
+                toolbarIcon("pencil.circle", background: viewModel.markerModeActive ? .red : .white, foreground: viewModel.markerModeActive ? .white : .black)
             }
             Button {
                 viewModel.clearAllMarkers()
@@ -92,19 +118,36 @@ struct ContentView: View {
         NavigationView {
             List {
                 ForEach(viewModel.chartSummaries) { summary in
-                    HStack {
-                        Text(summary.tooth)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(summary.tooth)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            if !summary.note.isEmpty {
+                                Text(summary.note)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                         Spacer()
-                        Text("Pain: \(summary.painLevel)")
-                            .fontWeight(.bold)
-                            .foregroundColor(summary.painLevel > 5 ? .red : .orange)
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text(summary.diagnosis.rawValue)
+                                .fontWeight(.bold)
+                                .foregroundColor(summary.diagnosis.color)
+                            
+                            if summary.diagnosis == .pain {
+                                Text("Level: \(summary.painLevel)")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(summary.painLevel > 5 ? .red : .orange)
+                            }
+                        }
                     }
+                    .padding(.vertical, 4)
                 }
                 .onDelete(perform: viewModel.deleteSummary)
             }
-            .navigationTitle("Patient Pain Chart")
+            .navigationTitle("Patient Chart")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if let pdfURL = viewModel.generatePDF() {
@@ -123,8 +166,8 @@ struct ContentView: View {
 
     private func toolbarIcon(
         _ systemName: String,
-        foreground: Color = .black,
-        background: Color = .white
+        background: Color = .white,
+        foreground: Color = .black
     ) -> some View {
         Image(systemName: systemName)
             .font(.title2)
