@@ -13,6 +13,13 @@ final class DentalChartViewModel {
     var savedMarkers: [PainMarkerModel] = []
     var markerNodes: [SCNNode] = []
     
+    var patients: [PatientProfile] = []
+    var currentPatientId: UUID?
+    
+    var activePatient: PatientProfile? {
+        patients.first { $0.id == currentPatientId }
+    }
+    
     // New properties
     var currentPainLevel: Double = 5.0
     var currentDiagnosis: DiagnosisType = .pain
@@ -262,6 +269,18 @@ final class DentalChartViewModel {
         markerNodes.forEach { $0.removeFromParentNode() }
         markerNodes.removeAll()
         
+        // Reset all base teeth to default state
+        for rawName in toothMapping.keys {
+            if let toothNode = rootNode.childNode(withName: rawName, recursively: true) {
+                toothNode.opacity = 1.0
+                toothNode.eulerAngles = SCNVector3Zero
+                let material = SCNMaterial()
+                material.lightingModel = .physicallyBased
+                material.diffuse.contents = UIColor.white
+                toothNode.geometry?.materials = [material]
+            }
+        }
+        
         // Hide missing teeth, then add spheres for others
         for marker in savedMarkers {
             guard let toothNode = rootNode.childNode(withName: marker.rawNodeName, recursively: true) else { continue }
@@ -304,9 +323,15 @@ final class DentalChartViewModel {
             Text("ToothCare Patient Chart")
                 .font(.largeTitle)
                 .bold()
-                .padding(.bottom, 20)
+            
+            if let patient = activePatient {
+                Text("Patient: \(patient.name) (Age: \(patient.age))")
+                    .font(.title2)
+            }
+            
             Text("Date: \(Date().formatted(date: .abbreviated, time: .shortened))")
                 .padding(.bottom, 20)
+            
             ForEach(savedMarkers) { marker in
                 HStack(alignment: .top) {
                     VStack(alignment: .leading) {
@@ -352,14 +377,71 @@ final class DentalChartViewModel {
     // MARK: - Persistence
 
     func saveData() {
-        guard let encoded = try? JSONEncoder().encode(savedMarkers) else { return }
-        UserDefaults.standard.set(encoded, forKey: "ToothCare_SavedChart_v2")
+        if let id = currentPatientId, let idx = patients.firstIndex(where: { $0.id == id }) {
+            patients[idx].markers = savedMarkers
+            patients[idx].lastVisit = Date()
+        }
+        
+        guard let encoded = try? JSONEncoder().encode(patients) else { return }
+        UserDefaults.standard.set(encoded, forKey: "ToothCare_Patients_v2")
+        
+        if let id = currentPatientId {
+            UserDefaults.standard.set(id.uuidString, forKey: "ToothCare_CurrentPatient_v2")
+        }
     }
 
     func loadData() {
-        guard let data = UserDefaults.standard.data(forKey: "ToothCare_SavedChart_v2"),
-              let decoded = try? JSONDecoder().decode([PainMarkerModel].self, from: data) else { return }
-        savedMarkers = decoded
+        if let data = UserDefaults.standard.data(forKey: "ToothCare_Patients_v2"),
+           let decoded = try? JSONDecoder().decode([PatientProfile].self, from: data) {
+            patients = decoded
+        }
+        
+        if let idString = UserDefaults.standard.string(forKey: "ToothCare_CurrentPatient_v2"),
+           let id = UUID(uuidString: idString) {
+            currentPatientId = id
+        } else {
+            if patients.isEmpty {
+                let defaultPatient = PatientProfile(name: "John Doe", age: "45")
+                patients.append(defaultPatient)
+                currentPatientId = defaultPatient.id
+            } else {
+                currentPatientId = patients.first?.id
+            }
+        }
+        
+        if let active = patients.first(where: { $0.id == currentPatientId }) {
+            savedMarkers = active.markers
+        }
+    }
+    
+    // MARK: - Patient Management
+    
+    func addPatient(name: String, age: String) {
+        let new = PatientProfile(name: name, age: age)
+        patients.append(new)
+        switchPatient(to: new.id)
+    }
+    
+    func switchPatient(to id: UUID) {
+        currentPatientId = id
+        if let active = patients.first(where: { $0.id == id }) {
+            savedMarkers = active.markers
+            refreshTrigger += 1
+        }
+        saveData()
+    }
+    
+    func deletePatient(id: UUID) {
+        patients.removeAll { $0.id == id }
+        if currentPatientId == id {
+            if let first = patients.first {
+                switchPatient(to: first.id)
+            } else {
+                addPatient(name: "New Patient", age: "30")
+            }
+        } else {
+            saveData()
+        }
     }
 }
 

@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var viewModel = DentalChartViewModel()
     @State private var showingChart: Bool = false
     @State private var showingAIInput: Bool = false
+    @State private var showingPatientDirectory: Bool = false
 
     // MARK: - Body
 
@@ -16,13 +17,20 @@ struct ContentView: View {
                 .edgesIgnoringSafeArea(.all)
 
             VStack {
-                Text(viewModel.selectedToothName)
-                    .font(.title)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(10)
-                    .shadow(radius: 5)
-                    .padding(.top, 40)
+                VStack(spacing: 4) {
+                    if let patient = viewModel.activePatient {
+                        Text(patient.name)
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                    }
+                    Text(viewModel.selectedToothName)
+                        .font(.title)
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(10)
+                .shadow(radius: 5)
+                .padding(.top, 40)
 
                 if viewModel.markerModeActive {
                     markerControlPanel
@@ -31,6 +39,9 @@ struct ContentView: View {
                 Spacer()
                 toolbar
             }
+        }
+        .sheet(isPresented: $showingPatientDirectory) {
+            PatientDirectoryView(viewModel: viewModel)
         }
         .sheet(isPresented: $showingChart) {
             chartSheet
@@ -104,6 +115,11 @@ struct ContentView: View {
                 viewModel.clearAllMarkers()
             } label: {
                 toolbarIcon("trash.circle", foreground: .red)
+            }
+            Button {
+                showingPatientDirectory = true
+            } label: {
+                toolbarIcon("person.2", foreground: .green)
             }
             Button {
                 showingAIInput = true
