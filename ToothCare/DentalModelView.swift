@@ -108,29 +108,39 @@ struct DentalModelView: UIViewRepresentable {
         SCNTransaction.begin()
         SCNTransaction.animationDuration = 0.3
         
-        // Handle X-Ray Mode
-        if let scene = uiView.scene {
-            scene.rootNode.enumerateChildNodes { node, _ in
-                if let name = node.name, name.contains("Xander") {
-                    if let material = node.geometry?.firstMaterial {
-                        if viewModel.isXRayMode {
-                            material.diffuse.contents = UIColor(white: 0.8, alpha: 0.3)
-                            material.transparent.contents = UIColor(white: 1.0, alpha: 0.3)
-                            material.blendMode = .add
-                            material.isDoubleSided = true
-                            material.writesToDepthBuffer = false
-                        } else {
-                            if node == viewModel.selectedNode {
-                                material.diffuse.contents = UIColor.systemBlue
-                            } else {
-                                material.diffuse.contents = UIColor.white
+        // Handle X-Ray Mode changes
+        if context.coordinator.lastXRayMode != viewModel.isXRayMode {
+            context.coordinator.lastXRayMode = viewModel.isXRayMode
+            if let scene = uiView.scene {
+                if viewModel.isXRayMode {
+                    scene.rootNode.enumerateChildNodes { node, _ in
+                        if let name = node.name, name.contains("Xander") {
+                            if let material = node.geometry?.firstMaterial {
+                                material.diffuse.contents = UIColor(white: 0.8, alpha: 0.3)
+                                material.transparent.contents = UIColor(white: 1.0, alpha: 0.3)
+                                material.blendMode = .add
+                                material.isDoubleSided = true
+                                material.writesToDepthBuffer = false
                             }
-                            material.transparent.contents = UIColor.white
-                            material.blendMode = .alpha
-                            material.isDoubleSided = false
-                            material.writesToDepthBuffer = true
                         }
                     }
+                } else {
+                    // Turn OFF X-Ray mode by restoring everything to its true state
+                    viewModel.restore3DMarkers(to: scene.rootNode)
+                }
+            }
+        }
+        
+        // Handle Selection Changes
+        if context.coordinator.lastSelectedNode != viewModel.selectedNode {
+            context.coordinator.lastSelectedNode = viewModel.selectedNode
+            if let scene = uiView.scene, !viewModel.isXRayMode {
+                // Restore all materials to clear the previous selection
+                viewModel.restore3DMarkers(to: scene.rootNode)
+                
+                // Highlight the new selection
+                if let selected = viewModel.selectedNode, selected.opacity > 0 {
+                    selected.geometry?.firstMaterial?.diffuse.contents = UIColor.systemBlue
                 }
             }
         }
@@ -187,6 +197,8 @@ struct DentalModelView: UIViewRepresentable {
         var currentScale: Float = 1.0
         var lastResetTrigger: Int = 0
         var lastRefreshTrigger: Int = 0
+        var lastXRayMode: Bool = false
+        var lastSelectedNode: SCNNode?
         var idleSpinAnimation: CABasicAnimation?
         var rootNode: SCNNode?
 
