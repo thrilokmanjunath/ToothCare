@@ -79,6 +79,11 @@ struct ContentView: View {
         HStack {
             Spacer()
             Button {
+                viewModel.resetCamera()
+            } label: {
+                toolbarIcon("arrow.counterclockwise")
+            }
+            Button {
                 viewModel.isXRayMode.toggle()
             } label: {
                 toolbarIcon("viewfinder", background: viewModel.isXRayMode ? .blue : .white, foreground: viewModel.isXRayMode ? .white : .black)

@@ -134,6 +134,34 @@ struct DentalModelView: UIViewRepresentable {
                 }
             }
         }
+        // Handle Reset Camera
+        if context.coordinator.lastResetTrigger != viewModel.resetCameraTrigger {
+            context.coordinator.lastResetTrigger = viewModel.resetCameraTrigger
+            
+            // Reset rotation/translation handled by SceneKit's camera controller
+            uiView.defaultCameraController.clearRoll()
+            uiView.pointOfView?.transform = SCNMatrix4Identity
+            uiView.pointOfView?.position = SCNVector3(0, 0, 3.5)
+            
+            // Reset our custom pinch scale
+            let base = context.coordinator.baseScale
+            context.coordinator.currentScale = base
+            uiView.scene?.rootNode.scale = SCNVector3(base, base, base)
+            
+            // Also reset pivot/rotation if they somehow messed it up
+            uiView.scene?.rootNode.transform = SCNMatrix4Identity
+            // Need to re-apply pivot centering
+            if let root = uiView.scene?.rootNode {
+                let (min, max) = root.boundingBox
+                let center = SCNVector3(
+                    x: (max.x + min.x) / 2,
+                    y: (max.y + min.y) / 2,
+                    z: (max.z + min.z) / 2
+                )
+                root.pivot = SCNMatrix4MakeTranslation(center.x, center.y, center.z)
+                root.scale = SCNVector3(base, base, base)
+            }
+        }
         
         SCNTransaction.commit()
     }
@@ -149,6 +177,7 @@ struct DentalModelView: UIViewRepresentable {
         var drawGesture: UIPanGestureRecognizer?
         var baseScale: Float = 1.0
         var currentScale: Float = 1.0
+        var lastResetTrigger: Int = 0
         var idleSpinAnimation: CABasicAnimation?
         var rootNode: SCNNode?
 

@@ -17,11 +17,11 @@ final class DentalChartViewModel {
     var currentPainLevel: Double = 5.0
     var currentDiagnosis: DiagnosisType = .pain
     var currentNote: String = ""
-    var isXRayMode: Bool = false {
-        didSet {
-            // Re-apply material on selected node if needed, or notify the view.
-            // X-Ray material changes are handled directly in DentalModelView.updateUIView.
-        }
+    var isXRayMode: Bool = false
+    var resetCameraTrigger: Int = 0
+
+    func resetCamera() {
+        resetCameraTrigger += 1
     }
 
     var chartSummaries: [ChartSummary] {
